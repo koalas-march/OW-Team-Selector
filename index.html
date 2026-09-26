@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OW チームセレクター</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&display=swap');
+
+        :root {
+            --ow-orange: #f06414;
+            --ow-white: #ffffff;
+            --ow-dark: #28354f;
+            --ow-blue: #03a9f4;
+            --ow-red: #f44336;
+            --ow-bg: #121c2c;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--ow-bg);
+            background-image: radial-gradient(circle at center, #1e2e4a 0%, #121c2c 100%);
+            color: var(--ow-white);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(40, 53, 79, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 20px;
+            box-sizing: border-box;
+            clip-path: polygon(0 0, 96% 0, 100% 20px, 100% 100%, 4% 100%, 0 calc(100% - 20px));
+        }
+
+        @media (min-width: 768px) {
+            .container { padding: 40px; clip-path: polygon(0 0, 96% 0, 100% 40px, 100% 100%, 4% 100%, 0 calc(100% - 40px)); }
+        }
+
+        h1 {
+            text-transform: uppercase;
+            font-style: italic;
+            font-weight: 900;
+            margin: 0 0 20px 0;
+            font-size: 1.8rem;
+            border-left: 6px solid var(--ow-orange);
+            padding-left: 15px;
+            letter-spacing: 1px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid #4a5975;
+            color: white;
+            padding: 12px;
+            font-family: inherit;
+            font-size: 16px;
+            border-radius: 4px;
+            box-sizing: border-box;
+            outline: none;
+            margin-bottom: 10px;
+        }
+
+        .role-toggle-wrapper { margin-bottom: 20px; font-size: 14px; opacity: 0.9; }
+        .role-toggle-wrapper label { cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+        .controls-row {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        @media (min-width: 600px) {
+            .controls-row { flex-direction: row; }
+            .controls-row .main-btn { flex: 2; }
+            .controls-row .clear-btn { flex: 1; }
+            .controls-row .map-btn { flex: 1; }
+            .controls-row .reset-btn { flex: 1; }
+        }
+
+        .btn {
+            width: 100%;
+            border: none;
+            padding: 18px;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.2s;
+            clip-path: polygon(15px 0%, 100% 0%, calc(100% - 15px) 100%, 0% 100%);
+            box-sizing: border-box;
+        }
+        .main-btn { background: var(--ow-orange); color: white; font-size: 20px; }
+        .clear-btn { background: #3a4b6e; color: #ccc; font-size: 16px; }
+        .map-btn { background: var(--ow-white); color: var(--ow-dark); font-size: 16px; }
+        .reset-btn { background: #4a5975; color: white; font-size: 16px; }
+        .btn:hover { filter: brightness(1.2); transform: scale(1.01); }
+
+        .map-setting-container { border: 1px solid #4a5975; margin-bottom: 30px; margin-top: 5px; }
+        .map-setting-trigger {
+            background: #4a5975;
+            padding: 12px 15px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .map-setting-trigger.active::after { transform: rotate(180deg); }
+        .map-setting-trigger::after { content: '▼'; font-size: 10px; transition: transform 0.3s; }
+
+        .map-content { display: none; padding: 15px; background: rgba(0,0,0,0.3); }
+        .map-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; text-transform: uppercase; }
+        @media (min-width: 480px) { .map-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
+
+        .mode-header { grid-column: 1 / -1; margin-top: 10px; border-bottom: 1px solid rgba(3, 169, 244, 0.3); padding: 5px 0; }
+        .mode-header label { cursor: pointer; color: var(--ow-blue); font-size: 0.8em; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+
+        .map-display {
+            background: rgba(255,255,255,0.05);
+            border-left: 4px solid var(--ow-orange);
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 25px;
+            display: none;
+        }
+        .map-name { font-size: 26px; font-weight: 900; font-style: italic; text-transform: uppercase; }
+
+        .result { display: flex; flex-direction: column; gap: 15px; }
+        @media (min-width: 768px) { .result { flex-direction: row; flex-wrap: wrap; } }
+
+        .team { flex: 1; min-width: 0; background: rgba(0,0,0,0.3); border-top: 4px solid #555; }
+        .team h3 { padding: 10px 15px; margin: 0; font-style: italic; font-size: 16px; background: rgba(255,255,255,0.05); }
+        .team-a { border-color: var(--ow-blue); }
+        .team-a h3 { color: var(--ow-blue); }
+        .team-b { border-color: var(--ow-red); }
+        .team-b h3 { color: var(--ow-red); }
+
+        ul { list-style: none; padding: 10px; margin: 0; }
+        li {
+            padding: 10px;
+            background: rgba(255,255,255,0.03);
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .role-box { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 900; font-style: italic; }
+        .role-icon { width: 14px; height: 14px; fill: currentColor; }
+        .tank-color { color: #00eaff; }   
+        .damage-color { color: #ff3333; } 
+        .support-color { color: #33ff33; }
+
+        .discord-section { margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        #discordOutput {
+            width: 100%; height: 80px;
+            background: #0a0a0a; color: #ccc;
+            font-family: monospace; padding: 10px;
+            border: 1px solid #333; box-sizing: border-box; font-size: 12px;
+        }
+        .copy-btn {
+            background: #5865f2; color: white; border: none;
+            padding: 10px 20px; cursor: pointer; font-weight: bold;
+            clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>OW チームセレクター</h1>
+    
+    <div class="input-wrapper">
+        <textarea id="playerList" placeholder="プレイヤー名を1行ずつ入力..." oninput="savePlayers()"></textarea>
+    </div>
+
+    <div class="role-toggle-wrapper">
+        <label><input type="checkbox" id="enableRoles"> ロール割り当てを有効化</label>
+    </div>
+    
+    <div class="controls-row">
+        <button class="btn main-btn" onclick="shuffleTeams()">チーム分け実行</button>
+        <button class="btn clear-btn" onclick="clearPlayerList()">入力リセット</button>
+    </div>
+
+    <div class="controls-row">
+        <button class="btn map-btn" onclick="pickRandomMap()">マップ抽選</button>
+        <button class="btn reset-btn" onclick="resetMapSelection()">マップクリア</button>
+    </div>
+
+    <div class="map-setting-container">
+        <div class="map-setting-trigger" id="mapTrigger" onclick="toggleMapSettings(this)">マップ設定</div>
+        <div class="map-content" id="mapContent">
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px;">
+                <button onclick="setAllMaps(true)" style="font-size:11px">全選択</button>
+                <button onclick="setAllMaps(false)" style="font-size:11px">全解除</button>
+            </div>
+            <div class="map-grid" id="mapGrid"></div>
+        </div>
+    </div>
+
+    <div id="mapArea" class="map-display">
+        <div id="mapModeLabel" style="font-size: 11px; letter-spacing: 2px; color: var(--ow-blue);">-</div>
+        <div id="mapName" class="map-name">-</div>
+    </div>
+
+    <div class="result" id="resultArea" style="display:none;">
+        <div class="team team-a"><h3>TEAM 1 (BLUE)</h3><ul id="team1"></ul></div>
+        <div class="team team-b"><h3>TEAM 2 (RED)</h3><ul id="team2"></ul></div>
+        <div id="specBox" class="team team-spectator"><h3>SPECTATORS</h3><ul id="spectators"></ul></div>
+    </div>
+
+    <div id="discordSection" class="discord-section" style="display:none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-size: 10px;">DISCORD TEXT</span>
+            <button class="copy-btn" onclick="copyDiscordText()">結果をコピー</button>
+        </div>
+        <textarea id="discordOutput" readonly></textarea>
+    </div>
+</div>
+
+<script>
+    const roleIcons = {
+        tank: `<svg class="role-icon" viewBox="0 0 32 32"><path d="M16,2c-10,0-12,8.4-12,12.2c0,8,6.4,14.6,12,15.8c5.6-1.2,12-7.8,12-15.8C28,10.4,26,2,16,2z"/></svg>`,
+        damage: `<svg class="role-icon" viewBox="0 0 32 32"><path d="M16,2c-2.2,0-4,3-4,6v10h1v10h1v2h4v-2h1v-10h1V8C20,5,18.2,2,16,2z M17,26h-2v-6h2V26z M17,18h-2v-8h2V18z"/></svg>`,
+        support: `<svg class="role-icon" viewBox="0 0 32 32"><path d="M25,13h-6V7c0-0.6-0.4-1-1-1h-4c-0.6,0-1,0.4-1,1v6H7c-0.6,0-1,0.4-1,1v4c0,0.6,0.4,1,1,1h6v6c0,0.6,0.4,1,1,1h4c0,0.6,0.4,1,1,1v-6h6c0-0.6,0.4-1,1-1v-4C26,13.4,25.6,13,25,13z"/></svg>`
+    };
+
+    // ハイブリッドの配列に「Neon Junction」を追加しました
+    const mapData = [
+        { mode: "ハイブリッド", maps: ["King's Row", "Eichenwalde", "Hollywood", "Blizzard World", "Numbani", "Midtown", "Paraíso", "Neon Junction"] },
+        { mode: "ペイロード", maps: ["Watchpoint: Gibraltar", "Dorado", "Route 66", "Junkertown", "Rialto", "Havana", "Circuit Royal", "Shambali Monastery"] },
+        { mode: "コントロール", maps: ["Lijiang Tower", "Ilios", "Nepal", "Oasis", "Busan", "Antarctic Peninsula", "Samoa"] },
+        { mode: "プッシュ", maps: ["New Queen Street", "Colosseo", "Esperança", "Runasapi"] },
+        { mode: "フラッシュポイント", maps: ["Suravasa", "New Junk City", "Aatlis"] }
+    ];
+
+    let mapHistory = [];
+    let currentMapInfo = null;
+    let lastT1Data, lastT2Data, lastSpecData, lastRoleFlag;
+    let spectatorHistory = [];
+
+    window.onload = function() {
+        const saved = localStorage.getItem('ow_players');
+        if (saved) document.getElementById('playerList').value = saved;
+    };
+
+    function savePlayers() {
+        localStorage.setItem('ow_players', document.getElementById('playerList').value);
+    }
+
+    function clearPlayerList() {
+        if(confirm("プレイヤー入力欄をリセットしますか？")) {
+            document.getElementById('playerList').value = "";
+            localStorage.removeItem('ow_players');
+        }
+    }
+
+    function toggleMapSettings(el) {
+        const content = document.getElementById('mapContent');
+        el.classList.toggle('active');
+        content.style.display = content.style.display === 'block' ? 'none' : 'block';
+    }
+
+    const grid = document.getElementById('mapGrid');
+    mapData.forEach((group) => {
+        const header = document.createElement('div');
+        header.className = 'mode-header';
+        header.innerHTML = `<label><input type="checkbox" checked onchange="toggleModeMaps('${group.mode}', this.checked)"> ${group.mode}</label>`;
+        grid.appendChild(header);
+        group.maps.forEach(map => {
+            const label = document.createElement('label');
+            label.style.cursor = "pointer";
+            label.innerHTML = `<input type="checkbox" class="map-check" value="${map}" data-mode="${group.mode}" checked> <span style="font-size:11px">${map}</span>`;
+            grid.appendChild(label);
+        });
+    });
+
+    function toggleModeMaps(modeName, isChecked) {
+        document.querySelectorAll(`.map-check[data-mode="${modeName}"]`).forEach(cb => cb.checked = isChecked);
+    }
+
+    function setAllMaps(checked) {
+        document.querySelectorAll('.map-check').forEach(cb => cb.checked = checked);
+    }
+
+    function pickRandomMap() {
+        const checkedBoxes = Array.from(document.querySelectorAll('.map-check:checked'));
+        if (checkedBoxes.length === 0) return alert("マップを1つ選択してください");
+        let candidates = checkedBoxes.map(cb => ({ name: cb.value.toUpperCase(), mode: cb.dataset.mode }))
+                                    .filter(m => !mapHistory.includes(m.name));
+        if (candidates.length === 0) { 
+            mapHistory = []; 
+            candidates = checkedBoxes.map(cb => ({ name: cb.value.toUpperCase(), mode: cb.dataset.mode })); 
+        }
+        const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+        currentMapInfo = chosen;
+        mapHistory.push(chosen.name);
+        if (mapHistory.length > 3) mapHistory.shift();
+        document.getElementById('mapModeLabel').textContent = chosen.mode;
+        document.getElementById('mapName').textContent = chosen.name;
+        document.getElementById('mapArea').style.display = 'block';
+        if (document.getElementById('resultArea').style.display === 'flex') refreshDiscordOutput();
+    }
+
+    function resetMapSelection() {
+        mapHistory = [];
+        currentMapInfo = null;
+        document.getElementById('mapArea').style.display = 'none';
+        if (document.getElementById('resultArea').style.display === 'flex') refreshDiscordOutput();
+    }
+
+    const roles = [
+        { name: "タンク", class: "tank-color", icon: roleIcons.tank }, 
+        { name: "ダメージ", class: "damage-color", icon: roleIcons.damage }, 
+        { name: "ダメージ", class: "damage-color", icon: roleIcons.damage },
+        { name: "サポート", class: "support-color", icon: roleIcons.support }, 
+        { name: "サポート", class: "support-color", icon: roleIcons.support }
+    ];
+
+    function shuffleTeams() {
+        const text = document.getElementById('playerList').value;
+        const useRoles = document.getElementById('enableRoles').checked;
+        let allPlayers = text.split(/\r?\n/).filter(line => line.trim() !== "");
+        if (allPlayers.length < 2) return alert("プレイヤーを入力してください");
+
+        let specCounts = {};
+        allPlayers.forEach(p => specCounts[p] = 0);
+        spectatorHistory.forEach(roundSpecs => {
+            roundSpecs.forEach(p => { if(specCounts[p] !== undefined) specCounts[p]++; });
+        });
+
+        let sortedPool = [...allPlayers].sort(() => Math.random() - 0.5);
+        sortedPool.sort((a, b) => specCounts[b] - specCounts[a]);
+
+        let t1Names = sortedPool.slice(0, 5);
+        let t2Names = sortedPool.slice(5, 10);
+        let specNames = sortedPool.slice(10);
+
+        spectatorHistory.push(specNames);
+        if (spectatorHistory.length > 10) spectatorHistory.shift();
+
+        const t1WithRoles = useRoles ? assignRoles(t1Names) : t1Names.map(name => ({name}));
+        const t2WithRoles = useRoles ? assignRoles(t2Names) : t2Names.map(name => ({name}));
+
+        renderList('team1', t1WithRoles);
+        renderList('team2', t2WithRoles);
+        renderList('spectators', specNames.map(name => ({name})));
+        document.getElementById('resultArea').style.display = 'flex';
+        document.getElementById('specBox').style.display = specNames.length > 0 ? 'block' : 'none';
+        lastT1Data = t1WithRoles; lastT2Data = t2WithRoles; lastSpecData = specNames; lastRoleFlag = useRoles;
+        refreshDiscordOutput();
+    }
+
+    function assignRoles(members) {
+        const shuffledRoles = [...roles].sort(() => Math.random() - 0.5);
+        return members.map((name, i) => ({ name: name, role: shuffledRoles[i] }));
+    }
+
+    function renderList(id, members) {
+        const list = document.getElementById(id);
+        list.innerHTML = "";
+        members.forEach(m => {
+            const li = document.createElement('li');
+            li.innerHTML = m.role ? `<span>${m.name}</span><div class="role-box ${m.role.class}">${m.role.icon} ${m.role.name}</div>` : m.name;
+            list.appendChild(li);
+        });
+    }
+
+    function refreshDiscordOutput() {
+        if (!lastT1Data) return;
+        let text = "```md\n# OW対戦情報\n";
+        if (currentMapInfo) text += `MAP: ${currentMapInfo.name} (${currentMapInfo.mode})\n`;
+        text += "\n[ TEAM 1 ]\n";
+        lastT1Data.forEach(m => text += `- ${m.name}${lastRoleFlag ? ' (' + m.role.name + ')' : ''}\n`);
+        text += "\n[ TEAM 2 ]\n";
+        lastT2Data.forEach(m => text += `- ${m.name}${lastRoleFlag ? ' (' + m.role.name + ')' : ''}\n`);
+        if (lastSpecData.length > 0) { text += "\n[ SPECTATORS ]\n"; lastSpecData.forEach(m => text += `- ${m}\n`); }
+        text += "```";
+        document.getElementById('discordOutput').value = text;
+        document.getElementById('discordSection').style.display = 'block';
+    }
+
+    function copyDiscordText() {
+        const copyText = document.getElementById("discordOutput");
+        copyText.select();
+        document.execCommand("copy");
+        alert("コピー完了！");
+    }
+</script>
+</body>
+</html>
