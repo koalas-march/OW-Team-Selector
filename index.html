@@ -117,8 +117,20 @@
         .map-setting-trigger::after { content: '▼'; font-size: 10px; transition: transform 0.3s; }
 
         .map-content { display: none; padding: 15px; background: rgba(0,0,0,0.3); }
-        .map-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; text-transform: uppercase; }
-        @media (min-width: 480px) { .map-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px 15px;
+            text-transform: uppercase;
+        }
+
+        .map-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
 
         .mode-header { grid-column: 1 / -1; margin-top: 10px; border-bottom: 1px solid rgba(3, 169, 244, 0.3); padding: 5px 0; }
         .mode-header label { cursor: pointer; color: var(--ow-blue); font-size: 0.8em; font-weight: bold; display: flex; align-items: center; gap: 8px; }
@@ -229,16 +241,16 @@
 </div>
 
 <script>
+    // タンク＝シールド形状[cite: 2]、ダメージ＝3連弾丸形状[cite: 3] にアップデート
     const roleIcons = {
-        tank: `<svg class="role-icon" viewBox="0 0 32 32"><path d="M16,2c-10,0-12,8.4-12,12.2c0,8,6.4,14.6,12,15.8c5.6-1.2,12-7.8,12-15.8C28,10.4,26,2,16,2z"/></svg>`,
-        damage: `<svg class="role-icon" viewBox="0 0 32 32"><path d="M16,2c-2.2,0-4,3-4,6v10h1v10h1v2h4v-2h1v-10h1V8C20,5,18.2,2,16,2z M17,26h-2v-6h2V26z M17,18h-2v-8h2V18z"/></svg>`,
+        tank: `<svg class="role-icon" viewBox="0 0 32 32"><path d="M6,6h20v4c0,8-4.5,13.5-10,16C10.5,23.5,6,18,6,10V6z"/></svg>`,
+        damage: `<svg class="role-icon" viewBox="0 0 32 32"><path d="M8,4h3v16H8V4z M14.5,4h3v16h-3V4z M21,4h3v16h-3V4z M6,22h20v2H6V22z M7,25h18v3H7V25z"/></svg>`,
         support: `<svg class="role-icon" viewBox="0 0 32 32"><path d="M25,13h-6V7c0-0.6-0.4-1-1-1h-4c-0.6,0-1,0.4-1,1v6H7c-0.6,0-1,0.4-1,1v4c0,0.6,0.4,1,1,1h6v6c0,0.6,0.4,1,1,1h4c0,0.6,0.4,1,1,1v-6h6c0-0.6,0.4-1,1-1v-4C26,13.4,25.6,13,25,13z"/></svg>`
     };
 
-    // ハイブリッドの配列に「Neon Junction」を追加しました
     const mapData = [
         { mode: "ハイブリッド", maps: ["King's Row", "Eichenwalde", "Hollywood", "Blizzard World", "Numbani", "Midtown", "Paraíso", "Neon Junction"] },
-        { mode: "ペイロード", maps: ["Watchpoint: Gibraltar", "Dorado", "Route 66", "Junkertown", "Rialto", "Havana", "Circuit Royal", "Shambali Monastery"] },
+        { mode: "エスコート", maps: ["Watchpoint: Gibraltar", "Dorado", "Route 66", "Junkertown", "Rialto", "Havana", "Circuit Royal", "Shambali Monastery", "Watchpoint: Grímsvötn"] },
         { mode: "コントロール", maps: ["Lijiang Tower", "Ilios", "Nepal", "Oasis", "Busan", "Antarctic Peninsula", "Samoa"] },
         { mode: "プッシュ", maps: ["New Queen Street", "Colosseo", "Esperança", "Runasapi"] },
         { mode: "フラッシュポイント", maps: ["Suravasa", "New Junk City", "Aatlis"] }
@@ -279,7 +291,7 @@
         grid.appendChild(header);
         group.maps.forEach(map => {
             const label = document.createElement('label');
-            label.style.cursor = "pointer";
+            label.className = 'map-item';
             label.innerHTML = `<input type="checkbox" class="map-check" value="${map}" data-mode="${group.mode}" checked> <span style="font-size:11px">${map}</span>`;
             grid.appendChild(label);
         });
